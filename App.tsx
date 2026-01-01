@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import EventSection from './components/EventSection';
@@ -116,13 +115,6 @@ const App: React.FC = () => {
           <p className="text-gray-400 max-w-md mx-auto italic">
             "For where your treasure is, there your heart will be also."
           </p>
-          <div className="flex justify-center space-x-6">
-            {['Instagram', 'Registry', 'FAQ'].map(item => (
-              <a key={item} href="#" className="text-[10px] uppercase tracking-widest font-bold hover:text-amber-500 transition-colors">
-                {item}
-              </a>
-            ))}
-          </div>
           <div className="pt-12 text-[10px] uppercase tracking-widest text-gray-600">
             © 2024 The Union. All rights reserved.
           </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { WeddingEvent } from '../types';
 
@@ -96,17 +95,26 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
             </div>
 
             <div className="pt-8 flex flex-wrap gap-4">
-              {!isProposal && (
-                <a 
+              {/* RSVP button / link */}
+              {event.rsvpOpen === false ? (
+                <button
+                  aria-disabled="true"
+                  disabled
+                  className="px-8 py-3 bg-black text-white rounded-full uppercase text-sm tracking-widest font-bold cursor-not-allowed opacity-60 shadow-sm"
+                >
+                  RSVP (Opening Soon)
+                </button>
+              ) : event.rsvpLink ? (
+                <a
                   href={event.rsvpLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block bg-gray-900 text-white px-10 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-amber-600 transition-all shadow-xl hover:-translate-y-1"
+                  className="px-8 py-3 bg-black hover:bg-amber-500 text-white rounded-full uppercase text-sm tracking-widest font-bold transition-colors transition-transform duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-400 shadow-md"
                 >
                   RSVP
                 </a>
-              )}
-              
+              ) : null}
+
               {displayImages.length > 0 && (
                 <button 
                   onClick={() => setIsGalleryOpen(!isGalleryOpen)}

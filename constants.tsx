@@ -1,4 +1,3 @@
-
 import { WeddingEvent, GalleryImage } from './types';
 
 export const BANK_DETAILS = {
@@ -82,6 +81,7 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     description: 'The Christian celebration. A walk down the aisle, a promise before God and each other in the presence of family and friends.',
     image: 'https://sgaiservices.blob.core.windows.net/wedding/pne-white.png',
     rsvpLink: 'https://partyverse.app/events/praise-ezekiel-white',
+    rsvpOpen: false, // disabled for now
     eventImages: [
       'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1465495910483-0d674b0b7a05?auto=format&fit=crop&q=80&w=800'
@@ -100,6 +100,7 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     description: 'Celebrating our roots with music, dance, and centuries-old traditions. A vibrant explosion of culture. Grand finale reception to follow.',
     image: 'https://sgaiservices.blob.core.windows.net/wedding/trad2hd.png',
     rsvpLink: 'https://partyverse.app/events/praise-ezekiel-traditional',
+    rsvpOpen: false, // disabled for now
     eventImages: [
       'https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?auto=format&fit=crop&q=80&w=800'

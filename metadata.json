@@ -1,0 +1,7 @@
+{
+  "name": "The Union - Praise and Ezekiel",
+  "description": "A luxury, high-end wedding website featuring detailed itineraries for the proposal, introduction, civil, traditional, and white wedding ceremonies with integrated AI toast generation.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

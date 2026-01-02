@@ -18,9 +18,8 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     dressCode: 'Summer Dinner',
     colors: ['Biege', 'White'],
     theme: 'Under the Stars',
-    description: 'Where Ezekiel got on one knee and Praise said yes to forever. A magical evening overlooking the Aegean Sea.',
+    description: 'Where Ezekiel got on one knee and Praise said yes to forever.',
     image: 'https://sgaiservices.blob.core.windows.net/wedding/kneel1.jpg',
-    rsvpLink: '', // Done already
     eventImages: [
       'https://sgaiservices.blob.core.windows.net/wedding/proposal-decor1.jpg',
       'https://sgaiservices.blob.core.windows.net/wedding/proposal-progress.jpg',
@@ -38,14 +37,13 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     title: 'Introduction Ceremony',
     date: 'March 17th 2026',
     time: 'i:00 PM (No African time)',
-    venue: 'Chief Aboaba Residence',
+    venue: 'Chief M.I Aboaba Residence',
     address: 'Magodo, Lagos',
     dressCode: 'Simple Native',
-    colors: ['All Colors Welcome'],
+    colors: ['Any Color'],
     theme: 'Two Families, One Path',
     description: 'The formal meeting of our families. A beautiful blend of heritage, respect, and the beginning of a lifelong union.',
     image: 'https://sgaiservices.blob.core.windows.net/wedding/pne-selfie.jpg',
-    rsvpLink: 'https://www.pv.rsvp/peunion-introduction',
     eventImages: [
       'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&q=80&w=800'
@@ -59,11 +57,10 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     venue: 'Canvas Concept Space',
     address: '36 Rasheed Alaba Williams Street, Lekki Phase 1, Lagos',
     dressCode: 'Semi Formal',
-    colors: ['Black with a touch of White'],
+    colors: ['Black with a Touch of White'],
     theme: 'Legal & Loyal',
     description: 'A quiet, intimate exchange of vows before the law. Signed, sealed, and delivered in love. With an intimate dinner to follow.',
     image: 'https://sgaiservices.blob.core.windows.net/wedding/pne-civil.png',
-    rsvpLink: 'https://www.pv.rsvp/civil-wedding-praiz-x-zikky',
     eventImages: [
       'https://images.unsplash.com/photo-1515922754546-3e40e1942d7b?auto=format&fit=crop&q=80&w=800'
     ]
@@ -76,12 +73,10 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     venue: 'This Great House',
     address: '9 Bolaji Benson St, Ikorodu Lagos',
     dressCode: 'Classy and Elegant',
-    colors: ['All Colors Welcome'],
+    colors: ['Any Color'],
     theme: 'The Elegant Union',
     description: 'The Christian celebration. A walk down the aisle, a promise before God and each other in the presence of family and friends.',
     image: 'https://sgaiservices.blob.core.windows.net/wedding/pne-white.png',
-    rsvpLink: 'https://partyverse.app/events/praise-ezekiel-white',
-    rsvpOpen: false, // disabled for now
     eventImages: [
       'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1465495910483-0d674b0b7a05?auto=format&fit=crop&q=80&w=800'
@@ -99,8 +94,6 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     theme: 'Cultural Grandeur',
     description: 'Celebrating our roots with music, dance, and centuries-old traditions. A vibrant explosion of culture. Grand finale reception to follow.',
     image: 'https://sgaiservices.blob.core.windows.net/wedding/trad2hd.png',
-    rsvpLink: 'https://partyverse.app/events/praise-ezekiel-traditional',
-    rsvpOpen: false, // disabled for now
     eventImages: [
       'https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?auto=format&fit=crop&q=80&w=800'

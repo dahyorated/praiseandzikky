@@ -42,12 +42,6 @@ const Navbar: React.FC = () => {
             </a>
           ))}
         </div>
-        <a 
-          href="#introduction" 
-          className="bg-amber-500 text-white px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-amber-600 transition-all shadow-md shrink-0"
-        >
-          RSVP
-        </a>
       </div>
     </nav>
   );

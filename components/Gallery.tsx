@@ -32,7 +32,7 @@ const Gallery: React.FC = () => {
       <section id="gallery" className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-5xl font-serif text-gray-900">Captured Moments</h2>
+            <h2 className="text-5xl font-serif text-gray-900">Pre-Wedding Photos</h2>
             <p className="text-gray-500 font-light tracking-widest uppercase text-sm">A glimpse into our journey together</p>
           </div>
           

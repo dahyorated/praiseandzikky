@@ -10,8 +10,6 @@ export interface WeddingEvent {
   theme?: string;
   description?: string;
   image?: string;
-  rsvpLink?: string;
-  rsvpOpen?: boolean; // added: controls whether RSVP is clickable
   eventImages?: string[];
 }
 

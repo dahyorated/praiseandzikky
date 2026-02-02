@@ -9,17 +9,20 @@ interface EventSectionProps {
 const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const isProposal = event.id === 'proposal';
   const displayImages = event.eventImages || [];
+  const hasValidAddress = event.address && event.address.toLowerCase() !== 'to be communicated';
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setSelectedImage(null);
+        setIsMapOpen(false);
       }
     };
 
-    if (selectedImage !== null) {
+    if (selectedImage !== null || isMapOpen) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
     }
@@ -28,10 +31,24 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [selectedImage]);
+  }, [selectedImage, isMapOpen]);
 
   const closeModal = () => {
     setSelectedImage(null);
+  };
+
+  const closeMapModal = () => {
+    setIsMapOpen(false);
+  };
+
+  const getMapUrl = () => {
+    const query = encodeURIComponent(`${event.venue}, ${event.address}`);
+    return `https://www.openstreetmap.org/export/embed.html?bbox=3.0%2C6.3%2C4.0%2C7.0&layer=mapnik`;
+  };
+
+  const getMapSearchUrl = () => {
+    const query = encodeURIComponent(`${event.venue}, ${event.address}`);
+    return `https://www.openstreetmap.org/search?query=${query}#map=15`;
   };
 
   return (
@@ -72,7 +89,22 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
               <div className="space-y-1">
                 <span className="text-[10px] uppercase tracking-widest text-amber-600 font-bold">Venue</span>
                 <p className="text-gray-800 font-medium">{event.venue}</p>
-                <p className="text-gray-500 text-sm">{event.address}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-gray-500 text-sm">{event.address}</p>
+                  {hasValidAddress && (
+                    <button
+                      onClick={() => setIsMapOpen(true)}
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-600 transition-colors"
+                      aria-label="View on map"
+                      title="View on map"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="space-y-1">
                 <span className="text-[10px] uppercase tracking-widest text-amber-600 font-bold">Theme</span>
@@ -157,7 +189,7 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
 
       {/* Lightbox Modal */}
       {selectedImage !== null && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-200"
           onClick={closeModal}
         >
@@ -170,19 +202,72 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          
-          <div 
+
+          <div
             className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img 
-              src={selectedImage} 
+            <img
+              src={selectedImage}
               alt={event.title}
               className="max-w-full max-h-full object-contain rounded-lg"
             />
-            
+
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 text-center">
               <p className="text-white font-medium text-lg">{event.title}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Map Modal */}
+      {isMapOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-200"
+          onClick={closeMapModal}
+        >
+          <button
+            onClick={closeMapModal}
+            className="absolute top-4 right-4 text-white hover:text-amber-400 transition-colors z-10"
+            aria-label="Close map"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div
+            className="relative w-full max-w-4xl bg-white rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 bg-amber-50 border-b border-amber-100">
+              <h3 className="text-lg font-serif text-gray-900">{event.venue}</h3>
+              <p className="text-sm text-gray-600">{event.address}</p>
+            </div>
+
+            <div className="aspect-video w-full bg-gray-100">
+              <iframe
+                src={`https://www.google.com/maps?q=${encodeURIComponent(event.venue + ', ' + event.address)}&output=embed`}
+                className="w-full h-full border-0"
+                title={`Map of ${event.venue}`}
+                loading="lazy"
+                allowFullScreen
+              />
+            </div>
+
+            <div className="p-4 bg-amber-50 border-t border-amber-100 flex justify-between items-center">
+              <p className="text-xs text-gray-500">Map data © OpenStreetMap contributors</p>
+              <a
+                href={getMapSearchUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-amber-600 hover:text-amber-700 font-medium"
+              >
+                Open in OpenStreetMap
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
             </div>
           </div>
         </div>

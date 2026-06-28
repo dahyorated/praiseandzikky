@@ -19,17 +19,14 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     colors: ['Biege', 'White'],
     theme: 'Under the Stars',
     description: 'Where Ezekiel got on one knee and Praise said yes to forever.',
-    image: 'https://sgaiservices.blob.core.windows.net/wedding/kneel1.jpg',
+    image: 'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/proposal/KCLI1532.jpg',
     eventImages: [
-      'https://sgaiservices.blob.core.windows.net/wedding/proposal-decor1.jpg',
-      'https://sgaiservices.blob.core.windows.net/wedding/proposal-progress.jpg',
-      'https://sgaiservices.blob.core.windows.net/wedding/proposal-ring.jpg',
-      'https://sgaiservices.blob.core.windows.net/wedding/pne-proposal1.jpg',
-      'https://sgaiservices.blob.core.windows.net/wedding/pne-proposal2.jpg',
-      'https://sgaiservices.blob.core.windows.net/wedding/pne-proposal3.jpg',
-      'https://sgaiservices.blob.core.windows.net/wedding/pne-proposal4.jpg',
-      'https://sgaiservices.blob.core.windows.net/wedding/pne-proposal5.jpg',
-      'https://sgaiservices.blob.core.windows.net/wedding/pne-proposal6.jpg'
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/proposal/IMG_5103.JPG',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/proposal/IMG_5159.jpeg',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/proposal/KCL12222.jpeg',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/proposal/KCLI1532.jpg',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/proposal/KCLI1629.jpg',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/proposal/KCLI1670%20copy.jpg'
     ]
   },
   {
@@ -43,10 +40,16 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     colors: ['Any Color'],
     theme: 'Two Families, One Path',
     description: 'The formal meeting of our families. A beautiful blend of heritage, respect, and the beginning of a lifelong union.',
-    image: 'https://sgaiservices.blob.core.windows.net/wedding/pne-selfie.jpg',
+    image: 'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_9208.JPG',
     eventImages: [
-      'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&q=80&w=800'
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_8972.JPG',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_8974.JPG',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_8979.JPG',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_8981.JPG',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_9208.JPG',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_9212.JPG',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_9213.JPG',
+      'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/intro/IMG_9214.JPG'
     ]
   },
   {
@@ -60,7 +63,7 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     colors: ['Black with a Touch of White'],
     theme: 'Legal & Loyal',
     description: 'A quiet, intimate exchange of vows before the law. Signed, sealed, and delivered in love. With an intimate dinner to follow.',
-    image: 'https://sgaiservices.blob.core.windows.net/wedding/pne-civil.png',
+    image: 'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/Civil/civil-wedding.png',
     eventImages: [
       'https://images.unsplash.com/photo-1515922754546-3e40e1942d7b?auto=format&fit=crop&q=80&w=800'
     ]
@@ -76,7 +79,7 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     colors: ['Any Color'],
     theme: 'The Elegant Union',
     description: 'The Christian celebration. A walk down the aisle, a promise before God and each other in the presence of family and friends.',
-    image: 'https://sgaiservices.blob.core.windows.net/wedding/pne-white.png',
+    image: 'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/White/white-wedding.png',
     eventImages: [
       'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1465495910483-0d674b0b7a05?auto=format&fit=crop&q=80&w=800'
@@ -93,7 +96,7 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     colors: ['Champagne Gold', 'Espresso Brown'],
     theme: 'Cultural Grandeur',
     description: 'Celebrating our roots with music, dance, and centuries-old traditions. A vibrant explosion of culture. Grand finale reception to follow.',
-    image: 'https://sgaiservices.blob.core.windows.net/wedding/trad2hd.png',
+    image: 'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/Trad/traditional-reception.png',
     eventImages: [
       'https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&q=80&w=800',
       'https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?auto=format&fit=crop&q=80&w=800'

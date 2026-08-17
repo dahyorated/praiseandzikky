@@ -1,109 +1,95 @@
 
-import React, { useState, useEffect } from 'react';
-import { GALLERY } from '../constants';
+import React, { useState, useRef, useEffect } from 'react';
 
+// The photos are not ready yet. The masonry grid and lightbox were removed for
+// now, and the GALLERY data is still in constants.tsx for when they are.
 const Gallery: React.FC = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<number | null>(null);
+  const [isNoticeOpen, setIsNoticeOpen] = useState(false);
+
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  const closeNotice = () => setIsNoticeOpen(false);
 
   useEffect(() => {
+    if (!isNoticeOpen) return;
+
+    dialogRef.current?.focus({ preventScroll: true });
+
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectedImage(null);
-      }
+      if (e.key === 'Escape') closeNotice();
     };
 
-    if (selectedImage !== null) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
+      triggerRef.current?.focus({ preventScroll: true });
     };
-  }, [selectedImage]);
-
-  const closeModal = () => {
-    setSelectedImage(null);
-  };
+  }, [isNoticeOpen]);
 
   return (
     <>
       <section id="gallery" className="py-24 bg-white">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-8 space-y-4">
+          <div className="text-center space-y-4">
             <h2 className="text-5xl font-serif text-gray-900">Pre-Wedding Photos</h2>
-            <p className="text-gray-500 font-light tracking-widest uppercase text-sm">A glimpse into our journey together</p>
+            <p className="text-gray-500 font-light tracking-widest uppercase text-sm">
+              A glimpse into our journey together
+            </p>
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="inline-flex items-center gap-2 border-2 border-amber-500 text-amber-600 px-10 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-amber-50 transition-all shadow-md active:scale-95 mt-4"
+              ref={triggerRef}
+              onClick={() => setIsNoticeOpen(true)}
+              className="inline-flex items-center gap-2 border-2 border-amber-500 text-amber-600 px-10 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-amber-50 transition-all shadow-md active:scale-95 mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
             >
-              {isExpanded ? 'Hide Photos' : 'View Photos'}
-              <svg className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              View Photos
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-          </div>
-
-          <div className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
-              {GALLERY.map((img, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => setSelectedImage(idx)}
-                  className="break-inside-avoid group relative rounded-2xl overflow-hidden shadow-lg cursor-pointer"
-                >
-                  <img
-                    src={img.url}
-                    alt={img.caption}
-                    className="w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                    <div>
-                      <span className="text-amber-400 text-[10px] uppercase tracking-widest font-bold">{img.category}</span>
-                      <p className="text-white font-medium">{img.caption}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Lightbox Modal */}
-      {selectedImage !== null && (
+      {isNoticeOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-200"
-          onClick={closeModal}
+          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={closeNotice}
         >
-          <button
-            onClick={closeModal}
-            className="absolute top-4 right-4 text-white hover:text-amber-400 transition-colors z-10"
-            aria-label="Close"
-          >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
           <div
-            className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="gallery-notice-title"
+            tabIndex={-1}
             onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-amber-100 p-10 text-center space-y-5 overflow-hidden focus-visible:outline-none animate-in fade-in zoom-in-95 duration-300"
           >
-            <img
-              src={GALLERY[selectedImage].url}
-              alt={GALLERY[selectedImage].caption}
-              className="max-w-full max-h-full object-contain rounded-lg"
-            />
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200"></div>
 
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 text-center">
-              <span className="text-amber-400 text-xs uppercase tracking-widest font-bold block mb-2">
-                {GALLERY[selectedImage].category}
-              </span>
-              <p className="text-white font-medium text-lg">{GALLERY[selectedImage].caption}</p>
-            </div>
+            <svg className="w-12 h-12 mx-auto text-amber-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h1.5l1-2h6l1 2H19a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <circle cx="12" cy="13" r="3.25" />
+            </svg>
+
+            <h3 id="gallery-notice-title" className="text-3xl font-serif text-gray-900">
+              Not quite yet
+            </h3>
+
+            <p className="text-gray-500 leading-relaxed">
+              Our pre-wedding photos are still being put together. They will show up right here as
+              soon as they are ready, so do check back.
+            </p>
+
+            <button
+              type="button"
+              onClick={closeNotice}
+              className="inline-flex items-center justify-center bg-amber-500 text-white px-10 py-3.5 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-amber-600 transition-all shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+            >
+              Got it
+            </button>
           </div>
         </div>
       )}

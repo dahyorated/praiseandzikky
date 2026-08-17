@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { WeddingEvent } from '../types';
+import ComingSoonDialog from './ComingSoonDialog';
 
 interface EventSectionProps {
   event: WeddingEvent;
@@ -9,9 +10,12 @@ interface EventSectionProps {
 const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const displayImages = event.eventImages || [];
+  // Events still ahead of us open a notice rather than a gallery.
+  const photosPending = event.photosPending === true;
+  const displayImages = photosPending ? [] : event.eventImages || [];
   const hasValidAddress = event.address && event.address.toLowerCase() !== 'to be communicated';
 
   const closeLightbox = useCallback(() => {
@@ -151,13 +155,13 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
             </div>
 
             <div className="pt-8 flex flex-wrap gap-4">
-               {displayImages.length > 0 && (
+               {(photosPending || displayImages.length > 0) && (
                  <button
-                   onClick={() => setIsGalleryOpen(!isGalleryOpen)}
-                   className="inline-flex items-center gap-2 border-2 border-amber-500 text-amber-600 px-10 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-amber-50 transition-all shadow-md active:scale-95"
+                   onClick={() => (photosPending ? setIsNoticeOpen(true) : setIsGalleryOpen(!isGalleryOpen))}
+                   className="inline-flex items-center gap-2 border-2 border-amber-500 text-amber-600 px-10 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-amber-50 transition-all shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                  >
-                   {isGalleryOpen ? 'Close Highlights' : 'View Highlights'}
-                   <svg className={`w-4 h-4 transition-transform duration-300 ${isGalleryOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   {!photosPending && isGalleryOpen ? 'Close Highlights' : 'View Highlights'}
+                   <svg className={`w-4 h-4 transition-transform duration-300 ${!photosPending && isGalleryOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                    </svg>
                  </button>
@@ -166,7 +170,8 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
           </div>
         </div>
 
-        {/* Collapsible Gallery */}
+        {/* Collapsible Gallery, skipped entirely while photos are pending */}
+        {!photosPending && (
         <div className={`mt-12 overflow-hidden transition-all duration-700 ease-in-out ${isGalleryOpen ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="bg-amber-50/50 p-8 rounded-3xl border border-amber-100">
             <div className="flex justify-center items-center mb-8 px-4">
@@ -205,7 +210,15 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
             )}
           </div>
         </div>
+        )}
       </div>
+
+      <ComingSoonDialog
+        isOpen={isNoticeOpen}
+        onClose={() => setIsNoticeOpen(false)}
+        title="Not quite yet"
+        message={`The ${event.title} has not happened yet. Photos from the day will show up right here afterwards, so do check back.`}
+      />
 
       {/* Carousel Lightbox Modal */}
       {lightboxIndex !== null && lightboxImages.length > 0 && (

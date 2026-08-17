@@ -80,10 +80,7 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     theme: 'The Elegant Union',
     description: 'The Christian celebration. A walk down the aisle, a promise before God and each other in the presence of family and friends.',
     image: 'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/White/white-wedding.png',
-    eventImages: [
-      'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1465495910483-0d674b0b7a05?auto=format&fit=crop&q=80&w=800'
-    ]
+    photosPending: true
   },
   {
     id: 'traditional',
@@ -97,10 +94,7 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     theme: 'Cultural Grandeur',
     description: 'Celebrating our roots with music, dance, and centuries-old traditions. A vibrant explosion of culture. Grand finale reception to follow.',
     image: 'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/Trad/traditional-reception.png',
-    eventImages: [
-      'https://images.unsplash.com/photo-1507504031003-b417219a0fde?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?auto=format&fit=crop&q=80&w=800'
-    ]
+    photosPending: true
   }
 ];
 

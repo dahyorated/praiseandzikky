@@ -11,6 +11,9 @@ export interface WeddingEvent {
   description?: string;
   image?: string;
   eventImages?: string[];
+  // Event has not happened yet, so View Highlights opens a notice instead of
+  // a gallery. Overrides eventImages.
+  photosPending?: boolean;
 }
 
 export interface GalleryImage {

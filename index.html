@@ -29,6 +29,38 @@
             background: rgba(255, 250, 245, 0.8);
             backdrop-filter: blur(10px);
         }
+        /* The rising sun on the RSVP confirmation. The disc is clipped at the
+           horizon so it emerges rather than slides into view. */
+        @keyframes rsvp-sun-rise {
+            from { transform: translateY(30px); }
+            to   { transform: translateY(0); }
+        }
+        @keyframes rsvp-rays-in {
+            from { opacity: 0; transform: scale(0.6); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .rsvp-sun-disc {
+            transform-box: view-box;
+            animation: rsvp-sun-rise 1.5s cubic-bezier(.22,.9,.3,1) both;
+        }
+        .rsvp-rays {
+            transform-box: view-box;
+            transform-origin: 60px 52px;
+            animation: rsvp-rays-in 0.5s ease-out 0.35s both;
+        }
+        /* Depleting ring on the thank you overlay. 125.664 is the circumference
+           of the r=20 circle it is drawn on. */
+        @keyframes rsvp-countdown-ring {
+            from { stroke-dashoffset: 0; }
+            to   { stroke-dashoffset: 125.664; }
+        }
+        .rsvp-countdown-ring {
+            stroke-dasharray: 125.664;
+            animation: rsvp-countdown-ring 4s linear both;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .rsvp-sun-disc, .rsvp-rays, .rsvp-countdown-ring { animation: none; }
+        }
     </style>
 <script type="importmap">
 {

@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import EventSection from './components/EventSection';
 import Gallery from './components/Gallery';
 import Registry from './components/Registry';
+import Rsvp from './components/Rsvp';
 import { WEDDING_EVENTS } from './constants';
 
 const App: React.FC = () => {
@@ -104,6 +105,9 @@ const App: React.FC = () => {
 
       {/* Gallery Section */}
       <Gallery />
+
+      {/* RSVP Section */}
+      <Rsvp />
 
       {/* Registry Section (Gifts) */}
       <Registry />

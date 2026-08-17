@@ -11,7 +11,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const calculateDaysToGo = () => {
-      const weddingDate = new Date('2027-01-30');
+      const weddingDate = new Date('2027-01-28');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       weddingDate.setHours(0, 0, 0, 0);

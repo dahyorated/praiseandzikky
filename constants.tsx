@@ -2,8 +2,8 @@ import { WeddingEvent, GalleryImage } from './types';
 
 export const BANK_DETAILS = {
   bankName: "Pocketapp",
-  accountNumber: "3565157633",
-  accountName: "Introduction Ceremony",
+  accountNumber: "3379278108",
+  accountName: "Praise and Ezekiel",
   message: "Your presence is our greatest gift, but if you wish to honor us with a monetary token, it would be deeply appreciated as we start our new chapter together."
 };
 

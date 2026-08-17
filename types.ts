@@ -11,9 +11,12 @@ export interface WeddingEvent {
   description?: string;
   image?: string;
   eventImages?: string[];
-  // Event has not happened yet, so View Highlights opens a notice instead of
-  // a gallery. Overrides eventImages.
+  // Photos are not available, so View Highlights opens a notice instead of a
+  // gallery. Overrides eventImages.
   photosPending?: boolean;
+  // Wording for that notice. Defaults to "the day has not happened yet", so set
+  // this for events that have passed but whose photos are still to come.
+  photosPendingMessage?: string;
 }
 
 export interface GalleryImage {

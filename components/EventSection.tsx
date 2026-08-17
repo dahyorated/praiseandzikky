@@ -217,7 +217,10 @@ const EventSection: React.FC<EventSectionProps> = ({ event, reversed }) => {
         isOpen={isNoticeOpen}
         onClose={() => setIsNoticeOpen(false)}
         title="Not quite yet"
-        message={`The ${event.title} has not happened yet. Photos from the day will show up right here afterwards, so do check back.`}
+        message={
+          event.photosPendingMessage ||
+          `The ${event.title} has not happened yet. Photos from the day will show up right here afterwards, so do check back.`
+        }
       />
 
       {/* Carousel Lightbox Modal */}

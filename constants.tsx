@@ -64,15 +64,14 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     theme: 'Legal & Loyal',
     description: 'A quiet, intimate exchange of vows before the law. Signed, sealed, and delivered in love. With an intimate dinner to follow.',
     image: 'https://pyrecreststorage.blob.core.windows.net/praiseandzikky/Civil/civil-wedding.png',
-    eventImages: [
-      'https://images.unsplash.com/photo-1515922754546-3e40e1942d7b?auto=format&fit=crop&q=80&w=800'
-    ]
+    photosPending: true,
+    photosPendingMessage: 'We have said our vows, but the photos are still being sorted. They will show up right here as soon as they are uploaded, so do check back.'
   },
   {
     id: 'white',
     title: 'White Wedding',
     date: 'January 28th 2027',
-    time: '10:00 AM',
+    time: '8:00 AM',
     venue: 'This Great House',
     address: '9 Bolaji Benson St, Ikorodu Lagos',
     dressCode: 'Classy and Elegant',
@@ -86,7 +85,7 @@ export const WEDDING_EVENTS: WeddingEvent[] = [
     id: 'traditional',
     title: 'Traditional Wedding and Reception',
     date: 'January 28th 2027',
-    time: '9:00 AM',
+    time: '12:00 PM',
     venue: 'To be communicated',
     address: 'To be communicated',
     dressCode: 'Native Attire (Aso-Ebi)',

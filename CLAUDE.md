@@ -34,7 +34,7 @@ npm run preview      # Preview production build
 #### Guest list and RSVP API
 The guest list must never reach a browser, so matching runs server-side.
 
-- **lib/names.mjs**: Normalisation, key generation and fuzzy matching. Imported by both the API and the upload script so keys can never drift. Changing normalisation invalidates every stored key and forces a re-import
+- **lib/names.mjs**: Normalisation, key generation and fuzzy matching. Imported by both the API and the upload script so keys can never drift. Changing normalisation invalidates every stored key and forces a re-import. A candidate needs three things, coverage, a strong anchor word, and every input word clearing WORST_MIN on its own. That last one is what stops a shared surname carrying a mismatched first name
 - **lib/firebaseRest.mjs**: Service account JWT flow, then RTDB over REST. Bypasses database rules, which is why the rules can deny every client read and write. Caches the guest list for 5 minutes, so a freshly imported name can take that long to go live
 - **lib/rsvpToken.mjs**: HMAC token issued by /api/match, required by /api/rsvp. Stops anyone posting an RSVP for a name they only guessed
 - **lib/rateLimit.mjs**: Per instance sliding window. A speed bump, not a guarantee

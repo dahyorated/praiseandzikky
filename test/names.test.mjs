@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { guestKey, matchName, normalise, parseGuestLine, tokenise, MAX_PLUS_ONES } from '../lib/names.mjs';
+import { guestKey, matchName, normalise, parseGuestLine, tokenise, wordScore, MAX_PLUS_ONES } from '../lib/names.mjs';
 
 const GUESTS = [
   'John Doe',
@@ -100,4 +100,36 @@ test('an absurd allowance is capped and flagged', () => {
 
 test('a line that is only a suffix is left alone rather than emptied', () => {
   assert.equal(parseGuestLine('+5').plusOnes, 0);
+});
+
+// A shared surname must not carry a mismatched first name. "Dami Adedayo" was
+// being offered "Dayo Adedayo" because the perfect surname dragged the average
+// over the coverage floor.
+test('a matching surname does not rescue a different first name', () => {
+  const list = [{ key: 'adedayo_dayo', name: 'Dayo Adedayo' }];
+  assert.equal(matchName('Dami Adedayo', list).status, 'none');
+  assert.equal(matchName('Tunde Adedayo', list).status, 'none');
+  assert.equal(matchName('Bolu Adedayo', list).status, 'none');
+});
+
+test('genuine typos in a surname are still caught', () => {
+  const list = [{ key: 'adedayo_dayo', name: 'Dayo Adedayo' }];
+  assert.equal(matchName('Dayo Adedyao', list).picks[0].name, 'Dayo Adedayo');
+  assert.equal(matchName('Dayo Adedayoo', list).picks[0].name, 'Dayo Adedayo');
+});
+
+test('a real guest always matches themselves exactly, before any suggestion', () => {
+  const list = [
+    { key: 'adedayo_dayo', name: 'Dayo Adedayo' },
+    { key: 'adedayo_tayo', name: 'Tayo Adedayo' },
+  ];
+  assert.equal(matchName('Tayo Adedayo', list).status, 'exact');
+  assert.equal(matchName('Dayo Adedayo', list).status, 'exact');
+});
+
+test('transpositions count as one mistake, not two', () => {
+  // "Abaoba" for "Aboaba" is a single swap. Scoring it as two edits would drag
+  // it under the per word floor and lose a very common kind of typo.
+  assert.ok(wordScore('abaoba', 'aboaba') > 0.8);
+  assert.ok(wordScore('dami', 'dayo') < 0.7);
 });

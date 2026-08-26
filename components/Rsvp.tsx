@@ -1,10 +1,10 @@
 
 import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
-import { submitRsvps, newPartyId, WHATSAPP_LINK } from '../services/rsvpService';
+import { matchGuest, submitRsvp, WHATSAPP_LINK } from '../services/rsvpService';
 import CountryCodeSelect, { DEFAULT_COUNTRY, type Country } from './CountryCodeSelect';
-import type { RsvpSubmission } from '../types';
+import type { MatchPick, RsvpGuestInput } from '../types';
 
-type Status = 'form' | 'sending' | 'done';
+type Step = 'lookup' | 'confirm' | 'details' | 'done';
 
 interface PartyMember {
   id: number;
@@ -44,9 +44,33 @@ const RisingSun: React.FC<{ className?: string }> = ({ className = 'w-48 h-28 mx
   );
 };
 
+const HelpLink: React.FC = () => (
+  <a
+    href={WHATSAPP_LINK}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="underline hover:text-red-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+  >
+    message us
+  </a>
+);
+
 const Rsvp: React.FC = () => {
+  const [step, setStep] = useState<Step>('lookup');
+
+  // Step one, finding the invitation.
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [typedName, setTypedName] = useState('');
+  const [looking, setLooking] = useState(false);
+  const [lookupError, setLookupError] = useState<React.ReactNode>(null);
+
+  // Step two, confirming a close match.
+  const [picks, setPicks] = useState<MatchPick[]>([]);
+
+  // Step three, the details. The name is already known by now.
+  const [guestName, setGuestName] = useState('');
+  const [token, setToken] = useState('');
   const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -54,26 +78,41 @@ const Rsvp: React.FC = () => {
   const [party, setParty] = useState<PartyMember[]>([]);
   // Honeypot. Hidden from real guests, so anything in it came from a bot.
   const [website, setWebsite] = useState('');
-
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<Status>('form');
-  const [sendFailed, setSendFailed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<React.ReactNode>(null);
+
+  // Step four.
+  const [alreadyResponded, setAlreadyResponded] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
 
-  // Focus targets, keyed by the same strings the errors are keyed by.
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
   const confirmationRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const nextMemberId = useRef(1);
+  const isFirstRender = useRef(true);
 
   const phoneLabelId = useId();
 
+  const setRef = (key: string) => (el: HTMLElement | null) => {
+    fieldRefs.current[key] = el;
+  };
+
+  // Focus the first control of each new step, but never on the initial render,
+  // which would steal focus the moment the page loads.
   useEffect(() => {
-    if (status === 'done' && !showOverlay) {
-      confirmationRef.current?.focus({ preventScroll: true });
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
-  }, [status, showOverlay]);
+
+    const target =
+      step === 'lookup' ? 'firstName' : step === 'confirm' ? 'pick-0' : step === 'details' ? 'phone' : null;
+
+    if (target) fieldRefs.current[target]?.focus({ preventScroll: true });
+    if (step === 'done' && !showOverlay) confirmationRef.current?.focus({ preventScroll: true });
+  }, [step, showOverlay]);
 
   const finishAndScrollUp = useCallback(() => {
     setShowOverlay(false);
@@ -87,11 +126,8 @@ const Rsvp: React.FC = () => {
 
     overlayRef.current?.focus({ preventScroll: true });
 
-    const tick = window.setInterval(() => {
-      setSecondsLeft((s) => Math.max(0, s - 1));
-    }, 1000);
+    const tick = window.setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
     const done = window.setTimeout(finishAndScrollUp, REDIRECT_SECONDS * 1000);
-
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') finishAndScrollUp();
     };
@@ -104,11 +140,80 @@ const Rsvp: React.FC = () => {
     };
   }, [showOverlay, finishAndScrollUp]);
 
+  const startAgain = () => {
+    setPicks([]);
+    setToken('');
+    setGuestName('');
+    setLookupError(null);
+    setStep('lookup');
+  };
+
+  const acceptMatch = (name: string, matchToken: string) => {
+    setGuestName(name);
+    setToken(matchToken);
+    setPicks([]);
+    setLookupError(null);
+    setStep('details');
+  };
+
+  const handleLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!firstName.trim() || !lastName.trim()) {
+      setLookupError('Please enter your first and last name, as they appear on your invitation.');
+      fieldRefs.current[firstName.trim() ? 'lastName' : 'firstName']?.focus({ preventScroll: true });
+      return;
+    }
+
+    const full = `${firstName.trim()} ${lastName.trim()}`;
+    setTypedName(full);
+    setLookupError(null);
+    setLooking(true);
+
+    try {
+      const result = await matchGuest(full);
+
+      switch (result.status) {
+        case 'exact':
+          acceptMatch(result.name ?? full, result.token ?? '');
+          break;
+        case 'suggest':
+          setPicks(result.picks ?? []);
+          setStep('confirm');
+          break;
+        case 'single':
+          setLookupError('Please enter your first and last name, as they appear on your invitation.');
+          break;
+        case 'slow_down':
+          setLookupError('That is a lot of tries at once. Give it a minute and try again.');
+          break;
+        case 'unavailable':
+          setLookupError(
+            <>
+              We could not reach our guest list just now. Try again in a moment, or <HelpLink /> and we
+              will sort it out.
+            </>
+          );
+          break;
+        default:
+          setLookupError(
+            <>
+              We could not find that name on our list. Check the spelling, or <HelpLink /> and we will
+              sort it out.
+            </>
+          );
+      }
+    } catch {
+      setLookupError('That did not go through. Check your connection and try again.');
+    } finally {
+      setLooking(false);
+    }
+  };
+
   const addMember = () => {
     if (party.length >= MAX_ADDITIONAL_GUESTS) return;
     const id = nextMemberId.current++;
     setParty((current) => [...current, { id, firstName: '', lastName: '', attending: null }]);
-    // Wait for the row to mount before sending focus into it.
     requestAnimationFrame(() => {
       fieldRefs.current[`guest-${id}-firstName`]?.focus({ preventScroll: true });
     });
@@ -132,9 +237,6 @@ const Rsvp: React.FC = () => {
   const validate = (): Record<string, string> => {
     const found: Record<string, string> = {};
 
-    if (!firstName.trim()) found.firstName = 'Enter your first name.';
-    if (!lastName.trim()) found.lastName = 'Enter your last name.';
-
     const digits = phone.replace(/\D/g, '');
     if (!digits) {
       found.phone = 'Add a phone number we can reach you on.';
@@ -157,10 +259,7 @@ const Rsvp: React.FC = () => {
     return found;
   };
 
-  // Errors are reported in the order the fields appear on screen.
   const focusOrder = () => [
-    'firstName',
-    'lastName',
     'phone',
     'email',
     'attending',
@@ -179,66 +278,68 @@ const Rsvp: React.FC = () => {
       return;
     }
 
-    // Bots get a convincing thank you and nothing is written.
-    if (website.trim()) {
-      setStatus('done');
-      return;
-    }
-
     // A local number typed as 0801... would otherwise become +2340801...
     const nationalNumber = phone.replace(/\D/g, '').replace(/^0+/, '');
+    const guests: RsvpGuestInput[] = party.map((m) => ({
+      firstName: m.firstName.trim(),
+      lastName: m.lastName.trim(),
+      attending: m.attending as boolean,
+    }));
 
-    const contactPhone = `${country.dial}${nationalNumber}`;
-    const contactEmail = email.trim();
-    const submittedBy = `${firstName.trim()} ${lastName.trim()}`;
-    const shared = {
-      partyId: newPartyId(),
-      partySize: 1 + party.length,
-      submittedBy,
-      submittedAt: new Date().toISOString(),
-    };
-
-    // One record per person. Everyone in the party carries the contact details
-    // of whoever filled the form in, so every row is reachable on its own.
-    const entries: RsvpSubmission[] = [
-      {
-        ...shared,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        name: submittedBy,
-        phone: contactPhone,
-        email: contactEmail,
-        attending: attending as boolean,
-        isPrimary: true,
-      },
-      ...party.map((m) => ({
-        ...shared,
-        firstName: m.firstName.trim(),
-        lastName: m.lastName.trim(),
-        name: `${m.firstName.trim()} ${m.lastName.trim()}`,
-        phone: contactPhone,
-        email: contactEmail,
-        attending: m.attending as boolean,
-        isPrimary: false,
-      })),
-    ];
-
-    setSendFailed(false);
-    setStatus('sending');
+    setSendError(null);
+    setSending(true);
 
     try {
-      await submitRsvps(entries);
-      setSecondsLeft(REDIRECT_SECONDS);
-      setStatus('done');
-      setShowOverlay(true);
+      const result = await submitRsvp({
+        token,
+        phone: `${country.dial}${nationalNumber}`,
+        email: email.trim(),
+        attending: attending as boolean,
+        guests,
+        website,
+      });
+
+      switch (result.status) {
+        case 'ok':
+        case 'already':
+          setAlreadyResponded(result.status === 'already');
+          setSecondsLeft(REDIRECT_SECONDS);
+          setStep('done');
+          setShowOverlay(true);
+          break;
+        case 'expired':
+          setLookupError('That took a little too long, so we need to check your name again.');
+          startAgain();
+          break;
+        case 'bad_phone':
+          setErrors({ phone: 'That phone number does not look right.' });
+          fieldRefs.current.phone?.focus({ preventScroll: true });
+          break;
+        case 'bad_email':
+          setErrors({ email: 'That email looks incomplete. Or leave it blank.' });
+          fieldRefs.current.email?.focus({ preventScroll: true });
+          break;
+        default:
+          setSendError(
+            <>
+              That did not send. Check your connection and try again, or <HelpLink /> and we will sort
+              it out.
+            </>
+          );
+      }
     } catch {
-      setSendFailed(true);
-      setStatus('form');
+      setSendError(
+        <>
+          That did not send. Check your connection and try again, or <HelpLink /> and we will sort it
+          out.
+        </>
+      );
+    } finally {
+      setSending(false);
     }
   };
 
-  const totalAttending =
-    (attending ? 1 : 0) + party.filter((m) => m.attending === true).length;
+  const totalAttending = (attending ? 1 : 0) + party.filter((m) => m.attending === true).length;
 
   const inputClasses = (hasError: boolean) =>
     `w-full bg-white border rounded-2xl px-5 py-4 text-gray-800 font-light placeholder:text-gray-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
@@ -261,9 +362,15 @@ const Rsvp: React.FC = () => {
       selected ? 'bg-amber-500 text-white shadow-sm' : 'bg-white text-gray-500 hover:bg-amber-50'
     }`;
 
-  const setRef = (key: string) => (el: HTMLElement | null) => {
-    fieldRefs.current[key] = el;
-  };
+  const primaryButton =
+    'w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-amber-500 text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-amber-600 transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2';
+
+  const spinner = (
+    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+  );
 
   return (
     <section id="rsvp" className="py-24 bg-gradient-to-b from-white to-amber-50/40 scroll-mt-20">
@@ -273,48 +380,15 @@ const Rsvp: React.FC = () => {
           <h2 className="text-4xl md:text-5xl font-serif text-gray-900">Will you be there?</h2>
           <div className="h-1 w-20 bg-amber-500 mx-auto rounded-full"></div>
           <p className="text-gray-500 leading-relaxed max-w-xl mx-auto pt-2">
-            We are excited to have you celebrate with us. Let us know if you can make it.
+            We are excited to have you celebrate with us. Find your name to begin.
           </p>
         </div>
 
         <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-amber-100 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200"></div>
 
-          {status === 'done' ? (
-            <div
-              ref={confirmationRef}
-              tabIndex={-1}
-              className="relative z-10 py-6 space-y-6 focus-visible:outline-none animate-in fade-in duration-500"
-            >
-              {totalAttending > 0 ? (
-                <>
-                  <RisingSun />
-
-                  <h3 className="text-3xl md:text-4xl font-serif text-gray-900">
-                    {totalAttending > 1 ? "You're all on the list" : "You're on the list"}
-                  </h3>
-                  <p className="text-gray-500 leading-relaxed max-w-md mx-auto">
-                    {totalAttending > 1
-                      ? `We have got all ${totalAttending} of you down. See you soon, and please, come looking boogie.`
-                      : 'See you soon. And please, come looking boogie.'}
-                  </p>
-                  <p className="font-cursive text-2xl text-amber-600 pt-2">#ALifetimeOfSunshine</p>
-                </>
-              ) : (
-                <>
-                  <svg className="w-12 h-12 mx-auto text-amber-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                  </svg>
-                  <h3 className="text-3xl md:text-4xl font-serif text-gray-900">We will miss you</h3>
-                  <p className="text-gray-500 leading-relaxed max-w-md mx-auto">
-                    Thank you for letting us know. You will be with us in spirit, and we hope to
-                    celebrate with you soon.
-                  </p>
-                </>
-              )}
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} noValidate className="relative z-10 space-y-6 text-left max-w-xl mx-auto">
+          {step === 'lookup' && (
+            <form onSubmit={handleLookup} noValidate className="relative z-10 space-y-6 text-left max-w-xl mx-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="rsvp-first-name" className={labelClasses}>First Name</label>
@@ -326,12 +400,9 @@ const Rsvp: React.FC = () => {
                     onChange={(e) => setFirstName(e.target.value)}
                     autoComplete="given-name"
                     placeholder="Bola"
-                    aria-invalid={Boolean(errors.firstName)}
-                    className={inputClasses(Boolean(errors.firstName))}
+                    className={inputClasses(false)}
                   />
-                  <div role="alert">{errors.firstName && <p className={errorClasses}>{errors.firstName}</p>}</div>
                 </div>
-
                 <div>
                   <label htmlFor="rsvp-last-name" className={labelClasses}>Last Name</label>
                   <input
@@ -342,11 +413,69 @@ const Rsvp: React.FC = () => {
                     onChange={(e) => setLastName(e.target.value)}
                     autoComplete="family-name"
                     placeholder="Tinubu"
-                    aria-invalid={Boolean(errors.lastName)}
-                    className={inputClasses(Boolean(errors.lastName))}
+                    className={inputClasses(false)}
                   />
-                  <div role="alert">{errors.lastName && <p className={errorClasses}>{errors.lastName}</p>}</div>
                 </div>
+              </div>
+
+              <p className="text-sm text-gray-400 font-light">
+                As it appears on your invitation.
+              </p>
+
+              <div className="pt-2 text-center space-y-4">
+                <button type="submit" disabled={looking} className={primaryButton}>
+                  {looking ? (<>{spinner}Checking</>) : 'Find my invitation'}
+                </button>
+                <div role="alert">{lookupError && <p className={errorClasses}>{lookupError}</p>}</div>
+              </div>
+            </form>
+          )}
+
+          {step === 'confirm' && (
+            <div className="relative z-10 space-y-6 max-w-xl mx-auto animate-in fade-in duration-300">
+              <div className="space-y-2">
+                <h3 className="text-3xl font-serif text-gray-900">Do you mean...</h3>
+                <p className="text-gray-400 font-light">You typed "{typedName}"</p>
+              </div>
+
+              <div className="space-y-3">
+                {picks.map((pick, index) => (
+                  <button
+                    key={pick.token}
+                    ref={setRef(`pick-${index}`)}
+                    type="button"
+                    onClick={() => acceptMatch(pick.name, pick.token)}
+                    className="w-full flex items-center justify-between gap-4 p-5 rounded-2xl border-2 border-amber-200 bg-white hover:border-amber-500 hover:bg-amber-50 transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+                  >
+                    <span className="font-serif text-xl text-gray-800">{pick.name}</span>
+                    <span className="text-[10px] uppercase tracking-widest font-bold text-amber-600 shrink-0">
+                      Yes, that is me
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={startAgain}
+                className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-amber-600 transition-colors rounded px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+              >
+                No, let me type it again
+              </button>
+            </div>
+          )}
+
+          {step === 'details' && (
+            <form onSubmit={handleSubmit} noValidate className="relative z-10 space-y-6 text-left max-w-xl mx-auto">
+              <div className="text-center space-y-1 pb-2">
+                <p className="font-serif text-2xl text-gray-900">Lovely to see you, {guestName}.</p>
+                <button
+                  type="button"
+                  onClick={startAgain}
+                  className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-amber-600 transition-colors rounded px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+                >
+                  Not you? Start again
+                </button>
               </div>
 
               <div>
@@ -575,44 +704,60 @@ const Rsvp: React.FC = () => {
               </div>
 
               <div className="pt-2 text-center space-y-4">
-                <button
-                  type="submit"
-                  disabled={status === 'sending'}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-amber-500 text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-amber-600 transition-all shadow-md active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
-                >
-                  {status === 'sending' ? (
-                    <>
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                      </svg>
-                      Sending
-                    </>
+                <button type="submit" disabled={sending} className={primaryButton}>
+                  {sending ? (
+                    <>{spinner}Sending</>
                   ) : party.length > 0 ? (
                     `Send our RSVP (${party.length + 1})`
                   ) : (
                     'Send my RSVP'
                   )}
                 </button>
-
-                <div role="alert">
-                  {sendFailed && (
-                    <p className={errorClasses}>
-                      That did not send. Check your connection and try again, or{' '}
-                      <a
-                        href={WHATSAPP_LINK}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 rounded"
-                      >
-                        message us
-                      </a>{' '}
-                      and we will sort it out.
-                    </p>
-                  )}
-                </div>
+                <div role="alert">{sendError && <p className={errorClasses}>{sendError}</p>}</div>
               </div>
             </form>
+          )}
+
+          {step === 'done' && (
+            <div
+              ref={confirmationRef}
+              tabIndex={-1}
+              className="relative z-10 py-6 space-y-6 focus-visible:outline-none animate-in fade-in duration-500"
+            >
+              {alreadyResponded ? (
+                <>
+                  <RisingSun />
+                  <h3 className="text-3xl md:text-4xl font-serif text-gray-900">We already have you</h3>
+                  <p className="text-gray-500 leading-relaxed max-w-md mx-auto">
+                    You have RSVP'd before. See you soon, and come looking boogie.
+                  </p>
+                </>
+              ) : totalAttending > 0 ? (
+                <>
+                  <RisingSun />
+                  <h3 className="text-3xl md:text-4xl font-serif text-gray-900">
+                    {totalAttending > 1 ? "You're all on the list" : "You're on the list"}
+                  </h3>
+                  <p className="text-gray-500 leading-relaxed max-w-md mx-auto">
+                    {totalAttending > 1
+                      ? `We have got all ${totalAttending} of you down. See you soon, and please, come looking boogie.`
+                      : 'See you soon. And please, come looking boogie.'}
+                  </p>
+                  <p className="font-cursive text-2xl text-amber-600 pt-2">#ALifetimeOfSunshine</p>
+                </>
+              ) : (
+                <>
+                  <svg className="w-12 h-12 mx-auto text-amber-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                  <h3 className="text-3xl md:text-4xl font-serif text-gray-900">We will miss you</h3>
+                  <p className="text-gray-500 leading-relaxed max-w-md mx-auto">
+                    Thank you for letting us know. You will be with us in spirit, and we hope to
+                    celebrate with you soon.
+                  </p>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -633,7 +778,7 @@ const Rsvp: React.FC = () => {
           >
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200"></div>
 
-            {totalAttending > 0 ? (
+            {totalAttending > 0 || alreadyResponded ? (
               <RisingSun className="w-40 h-24 mx-auto" />
             ) : (
               <svg className="w-12 h-12 mx-auto text-amber-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -642,7 +787,7 @@ const Rsvp: React.FC = () => {
             )}
 
             <h3 id="rsvp-overlay-title" className="text-3xl font-serif text-gray-900">
-              {totalAttending > 0 ? 'Thank you for RSVPing' : 'Thank you for letting us know'}
+              {totalAttending > 0 || alreadyResponded ? 'Thank you for RSVPing' : 'Thank you for letting us know'}
             </h3>
 
             <p className="text-gray-500 leading-relaxed">

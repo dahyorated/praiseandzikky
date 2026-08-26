@@ -25,18 +25,35 @@ export interface GalleryImage {
   category: 'proposal' | 'pre-wedding' | 'ceremony' | 'outing';
 }
 
-// One record per person. Everyone submitted together shares a partyId, and
-// carries the contact details of whoever filled the form in.
-export interface RsvpSubmission {
+// What /api/match sends back. Never more than two picks, never a count.
+export interface MatchPick {
   name: string;
+  token: string;
+}
+
+export interface MatchResponse {
+  status: 'exact' | 'suggest' | 'single' | 'none' | 'slow_down' | 'unavailable';
+  name?: string;
+  token?: string;
+  picks?: MatchPick[];
+}
+
+export interface RsvpGuestInput {
   firstName: string;
   lastName: string;
+  attending: boolean;
+}
+
+export interface RsvpRequest {
+  token: string;
   phone: string;
   email: string;
   attending: boolean;
-  isPrimary: boolean;
-  submittedBy: string;
-  partyId: string;
-  partySize: number;
-  submittedAt: string;
+  guests: RsvpGuestInput[];
+  website: string;
+}
+
+export interface RsvpResponse {
+  status: 'ok' | 'already' | 'expired' | 'bad_phone' | 'bad_email' | 'slow_down' | 'unavailable';
+  name?: string;
 }

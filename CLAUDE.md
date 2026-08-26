@@ -28,10 +28,27 @@ npm run preview      # Preview production build
 
 ### Data Layer
 - **constants.tsx**: All wedding event data, gallery images, and bank details
-- **types.ts**: TypeScript interfaces (WeddingEvent, GalleryImage, RsvpSubmission)
-- **services/rsvpService.ts**: Writes RSVPs to the existing Firebase Realtime Database over REST, no SDK. One record per person, sent as a single atomic PATCH so a party lands whole. Access is governed entirely by the database rules, which allow create-only writes and no reads
+- **types.ts**: TypeScript interfaces (WeddingEvent, GalleryImage, MatchResponse, RsvpRequest, RsvpResponse)
+- **services/rsvpService.ts**: Thin client for the two serverless endpoints. The browser never touches the database
 
-### Styling
+#### Guest list and RSVP API
+The guest list must never reach a browser, so matching runs server-side.
+
+- **lib/names.mjs**: Normalisation, key generation and fuzzy matching. Imported by both the API and the upload script so keys can never drift. Changing normalisation invalidates every stored key and forces a re-import
+- **lib/firebaseRest.mjs**: Service account JWT flow, then RTDB over REST. Bypasses database rules, which is why the rules can deny every client read and write. Caches the guest list for 5 minutes, so a freshly imported name can take that long to go live
+- **lib/rsvpToken.mjs**: HMAC token issued by /api/match, required by /api/rsvp. Stops anyone posting an RSVP for a name they only guessed
+- **lib/rateLimit.mjs**: Per instance sliding window. A speed bump, not a guarantee
+- **api/match.js**: POST { name }, returns exact, suggest, single or none. At most one suggestion, never a count
+- **api/rsvp.js**: POST with token, writes one record per person keyed on the guest key, so a second attempt returns `already` instead of duplicating
+- **scripts/build-guests.mjs**: guests.txt to guests.json, dry run by default. Import the result at /guests in the Firebase console
+- **test/names.test.mjs**: The regression baseline. Run before tuning COVERAGE_MIN or ANCHOR_MIN
+
+Additional guests are vouched for by the named invitee and are not checked
+against the list themselves.
+
+`npm run dev` does not serve /api. Use `npm run dev:api` for that.
+
+## Styling
 - Tailwind CSS via CDN
 - Google Fonts: Playfair Display (headings), Montserrat (body), Dancing Script (accents)
 - Amber/gold color scheme (#d4af37, #f9f295)
@@ -45,6 +62,14 @@ npm run preview      # Preview production build
 - Escape key closes modal dialogs, which also lock body scroll and return focus to their trigger
 - Scroll events trigger navbar styling changes
 - Animations live in the `index.html` style block, prefixed `rsvp-`, and are all disabled under `prefers-reduced-motion`
+
+## Environment
+
+Three variables, set in the Vercel dashboard and in .env.local for local API
+work. See .env.example. Never commit real values, this repo is public.
+
+Database rules deny all client access to both /guests and /rsvps. Only the
+service account and the Firebase console can read or write them.
 
 ## Deployment
 

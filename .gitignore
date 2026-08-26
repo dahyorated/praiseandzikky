@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# The guest list. Never commit these, this repo is public.
+guests.txt
+guests.json
+rsvps-*.csv
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel

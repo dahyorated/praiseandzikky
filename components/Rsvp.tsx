@@ -212,7 +212,7 @@ const Rsvp: React.FC = () => {
         case 'unavailable':
           setLookupError(
             <>
-              We could not reach our guest list just now. Try again in a moment, or message one of us
+              We could not reach our guest list just now. Try again in a moment, or message one of the contacts below
               and we will sort it out.
               <HelpContacts />
             </>
@@ -221,7 +221,7 @@ const Rsvp: React.FC = () => {
         default:
           setLookupError(
             <>
-              We could not find that name on our list. Check the spelling, or message one of us and we
+              We could not find that name on our list. Check the spelling, or message one of the contacts below and we
               will sort it out.
               <HelpContacts />
             </>
@@ -357,7 +357,7 @@ const Rsvp: React.FC = () => {
         default:
           setSendError(
             <>
-              That did not send. Check your connection and try again, or message one of us and we will
+              That did not send. Check your connection and try again, or message one of the contacts below and we will
               sort it out.
               <HelpContacts />
             </>
@@ -366,7 +366,7 @@ const Rsvp: React.FC = () => {
     } catch {
       setSendError(
         <>
-          That did not send. Check your connection and try again, or message one of us and we will
+          That did not send. Check your connection and try again, or message one of the contacts below and we will
           sort it out.
           <HelpContacts />
         </>

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
-import { matchGuest, submitRsvp, WHATSAPP_LINK } from '../services/rsvpService';
+import { matchGuest, submitRsvp, HELP_CONTACTS } from '../services/rsvpService';
 import CountryCodeSelect, { DEFAULT_COUNTRY, type Country } from './CountryCodeSelect';
 import type { MatchPick, RsvpGuestInput } from '../types';
 
@@ -43,15 +43,28 @@ const RisingSun: React.FC<{ className?: string }> = ({ className = 'w-48 h-28 mx
   );
 };
 
-const HelpLink: React.FC = () => (
-  <a
-    href={WHATSAPP_LINK}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="underline hover:text-red-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
-  >
-    message us
-  </a>
+const HelpContacts: React.FC = () => (
+  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+    {HELP_CONTACTS.map((contact) => (
+      <a
+        key={contact.whatsapp}
+        href={contact.whatsapp}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-3 p-3 rounded-2xl border-2 border-amber-200 bg-white hover:border-amber-500 hover:bg-amber-50 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+      >
+        <span className="shrink-0 w-9 h-9 rounded-full bg-[#25D366] text-white flex items-center justify-center" aria-hidden="true">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 016.988 2.896 9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.359.101 11.945c0 2.096.549 4.142 1.595 5.945L0 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.58 0 11.94-5.359 11.944-11.945a11.86 11.86 0 00-3.417-8.4"/>
+          </svg>
+        </span>
+        <span className="min-w-0 text-left">
+          <span className="block font-serif text-base text-gray-800 truncate">{contact.name}</span>
+          <span className="block text-[10px] uppercase tracking-widest font-bold text-amber-600">Message on WhatsApp</span>
+        </span>
+      </a>
+    ))}
+  </div>
 );
 
 const Rsvp: React.FC = () => {
@@ -195,16 +208,18 @@ const Rsvp: React.FC = () => {
         case 'unavailable':
           setLookupError(
             <>
-              We could not reach our guest list just now. Try again in a moment, or <HelpLink /> and we
-              will sort it out.
+              We could not reach our guest list just now. Try again in a moment, or message one of us
+              and we will sort it out.
+              <HelpContacts />
             </>
           );
           break;
         default:
           setLookupError(
             <>
-              We could not find that name on our list. Check the spelling, or <HelpLink /> and we will
-              sort it out.
+              We could not find that name on our list. Check the spelling, or message one of us and we
+              will sort it out.
+              <HelpContacts />
             </>
           );
       }
@@ -336,16 +351,18 @@ const Rsvp: React.FC = () => {
         default:
           setSendError(
             <>
-              That did not send. Check your connection and try again, or <HelpLink /> and we will sort
-              it out.
+              That did not send. Check your connection and try again, or message one of us and we will
+              sort it out.
+              <HelpContacts />
             </>
           );
       }
     } catch {
       setSendError(
         <>
-          That did not send. Check your connection and try again, or <HelpLink /> and we will sort it
-          out.
+          That did not send. Check your connection and try again, or message one of us and we will
+          sort it out.
+          <HelpContacts />
         </>
       );
     } finally {
@@ -440,7 +457,7 @@ const Rsvp: React.FC = () => {
                 <button type="submit" disabled={looking} className={primaryButton}>
                   {looking ? (<>{spinner}Checking</>) : 'Find my invitation'}
                 </button>
-                <div role="alert">{lookupError && <p className={errorClasses}>{lookupError}</p>}</div>
+                <div role="alert">{lookupError && <div className={errorClasses}>{lookupError}</div>}</div>
               </div>
             </form>
           )}
@@ -733,7 +750,7 @@ const Rsvp: React.FC = () => {
                     'Send my RSVP'
                   )}
                 </button>
-                <div role="alert">{sendError && <p className={errorClasses}>{sendError}</p>}</div>
+                <div role="alert">{sendError && <div className={errorClasses}>{sendError}</div>}</div>
               </div>
             </form>
           )}

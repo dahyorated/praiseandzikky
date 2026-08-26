@@ -3,7 +3,17 @@ import type { MatchResponse, RsvpRequest, RsvpResponse } from '../types';
 // The browser no longer touches the database. Both calls go through serverless
 // functions so the guest list stays server-side and the write cannot happen
 // without a token proving the name was matched.
-export const WHATSAPP_LINK = 'https://wa.me/2348026813305';
+export interface HelpContact {
+  name: string;
+  /** wa.me needs the number in full international form, digits only. */
+  whatsapp: string;
+}
+
+// Shown whenever a guest gets stuck, so they can reach a real person.
+export const HELP_CONTACTS: HelpContact[] = [
+  { name: 'Bolu Balogun', whatsapp: 'https://wa.me/2349126047250' },
+  { name: 'Baroh Balogun', whatsapp: 'https://wa.me/2348169566134' },
+];
 
 async function postJson<T>(path: string, payload: unknown): Promise<T> {
   const response = await fetch(path, {

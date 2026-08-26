@@ -45,6 +45,7 @@ export interface RsvpGuestInput {
   firstName: string;
   lastName: string;
   attending: boolean;
+  asoEbi: boolean;
 }
 
 export interface RsvpRequest {
@@ -52,6 +53,7 @@ export interface RsvpRequest {
   phone: string;
   email: string;
   attending: boolean;
+  asoEbi: boolean;
   guests: RsvpGuestInput[];
   website: string;
 }

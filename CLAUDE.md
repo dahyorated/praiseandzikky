@@ -21,7 +21,7 @@ npm run preview      # Preview production build
 - **App.tsx**: Main layout with hero section, countdown timer, event sections, gallery, RSVP, registry, and footer
 - **components/EventSection.tsx**: Individual event display with collapsible image gallery
 - **components/Gallery.tsx**: Photos are not ready yet, so this shows a "not quite yet" dialog. The masonry grid and lightbox were removed and the GALLERY data is still in constants.tsx for when they land
-- **components/Rsvp.tsx**: RSVP form, up to 4 extra guests, thank you overlay with a countdown, then scrolls to the top
+- **components/Rsvp.tsx**: Four steps, find your name, confirm it, details, done. Extra guests are capped by the invitation. Each attending person can ask to be contacted for Aso Ebi. Thank you overlay with a countdown, then scrolls to the top
 - **components/CountryCodeSelect.tsx**: Dial code listbox, defaults to +234, keyboard navigable with typeahead
 - **components/Registry.tsx**: Bank details with copy-to-clipboard functionality
 - **components/Navbar.tsx**: Fixed navigation with glass morphism effect on scroll

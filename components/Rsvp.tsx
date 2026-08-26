@@ -11,6 +11,7 @@ interface PartyMember {
   firstName: string;
   lastName: string;
   attending: boolean | null;
+  asoEbi: boolean;
 }
 
 const REDIRECT_SECONDS = 4;
@@ -89,6 +90,7 @@ const Rsvp: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [attending, setAttending] = useState<boolean | null>(null);
+  const [asoEbi, setAsoEbi] = useState(false);
   const [party, setParty] = useState<PartyMember[]>([]);
   // Honeypot. Hidden from real guests, so anything in it came from a bot.
   const [website, setWebsite] = useState('');
@@ -160,6 +162,8 @@ const Rsvp: React.FC = () => {
     setGuestName('');
     setAllowance(0);
     setParty([]);
+    setAttending(null);
+    setAsoEbi(false);
     setErrors({});
     setLookupError(null);
     setStep('lookup');
@@ -233,7 +237,7 @@ const Rsvp: React.FC = () => {
   const addMember = () => {
     if (party.length >= allowance) return;
     const id = nextMemberId.current++;
-    setParty((current) => [...current, { id, firstName: '', lastName: '', attending: null }]);
+    setParty((current) => [...current, { id, firstName: '', lastName: '', attending: null, asoEbi: false }]);
     requestAnimationFrame(() => {
       fieldRefs.current[`guest-${id}-firstName`]?.focus({ preventScroll: true });
     });
@@ -306,6 +310,7 @@ const Rsvp: React.FC = () => {
       firstName: m.firstName.trim(),
       lastName: m.lastName.trim(),
       attending: m.attending as boolean,
+      asoEbi: m.asoEbi,
     }));
 
     setSendError(null);
@@ -317,6 +322,7 @@ const Rsvp: React.FC = () => {
         phone: `${country.dial}${nationalNumber}`,
         email: email.trim(),
         attending: attending as boolean,
+        asoEbi,
         guests,
         website,
       });
@@ -580,7 +586,10 @@ const Rsvp: React.FC = () => {
                       name="rsvp-attending"
                       className="sr-only"
                       checked={attending === false}
-                      onChange={() => setAttending(false)}
+                      onChange={() => {
+                        setAttending(false);
+                        setAsoEbi(false);
+                      }}
                     />
                     <span
                       className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
@@ -597,6 +606,35 @@ const Rsvp: React.FC = () => {
                 </div>
                 <div role="alert">{errors.attending && <p className={errorClasses}>{errors.attending}</p>}</div>
               </fieldset>
+
+              {attending === true && (
+                <label className={`flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2 ${
+                  asoEbi ? 'border-amber-500 bg-amber-50' : 'border-amber-100 bg-white hover:border-amber-300 hover:bg-amber-50/40'
+                }`}>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={asoEbi}
+                    onChange={(e) => setAsoEbi(e.target.checked)}
+                  />
+                    <span
+                      className={`shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${
+                        asoEbi ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-amber-300 text-transparent'
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                  <span className="min-w-0">
+                    <span className="block font-serif text-lg text-gray-800">Contact me for Aso Ebi</span>
+                    <span className="block text-sm text-gray-500 font-light">
+                      We will reach out with the fabric details and prices.
+                    </span>
+                  </span>
+                </label>
+              )}
 
               {/* Only shown when the invitation covers extra guests. The real
                   limit is enforced by the API against the stored record. */}
@@ -689,7 +727,7 @@ const Rsvp: React.FC = () => {
                             name={`rsvp-guest-${member.id}-attending`}
                             className="sr-only"
                             checked={member.attending === false}
-                            onChange={() => updateMember(member.id, { attending: false })}
+                            onChange={() => updateMember(member.id, { attending: false, asoEbi: false })}
                           />
                           Can't make it
                         </label>
@@ -700,6 +738,28 @@ const Rsvp: React.FC = () => {
                         )}
                       </div>
                     </fieldset>
+
+                    {member.attending === true && (
+                      <label className="flex items-center gap-3 cursor-pointer rounded-lg focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2">
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={member.asoEbi}
+                          onChange={(e) => updateMember(member.id, { asoEbi: e.target.checked })}
+                        />
+                        <span
+                          className={`shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            member.asoEbi ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-amber-300 text-transparent'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                        <span className="text-sm text-gray-600 font-light">Contact them for Aso Ebi</span>
+                      </label>
+                    )}
                   </div>
                 ))}
 

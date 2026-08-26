@@ -45,6 +45,8 @@ export default async function handler(req, res) {
   }
 
   const attending = body.attending === true;
+  // Only meaningful for someone who is actually coming.
+  const asoEbi = attending && body.asoEbi === true;
   const party = Array.isArray(body.guests) ? body.guests : [];
 
   let guests;
@@ -94,6 +96,7 @@ export default async function handler(req, res) {
       firstName: firstWord(invitee.name),
       lastName: restOfName(invitee.name),
       attending,
+      asoEbi,
       isPrimary: true,
     },
   };
@@ -103,12 +106,15 @@ export default async function handler(req, res) {
     const lastName = String(member?.lastName ?? '').trim().slice(0, 60);
     if (!firstName || !lastName) return;
 
+    const memberAttending = member?.attending === true;
+
     records[`${check.guestKey}_g${index + 1}`] = {
       ...shared,
       name: `${firstName} ${lastName}`,
       firstName,
       lastName,
-      attending: member?.attending === true,
+      attending: memberAttending,
+      asoEbi: memberAttending && member?.asoEbi === true,
       isPrimary: false,
     };
   });

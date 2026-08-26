@@ -13,7 +13,6 @@ interface PartyMember {
   attending: boolean | null;
 }
 
-const MAX_ADDITIONAL_GUESTS = 4;
 const REDIRECT_SECONDS = 4;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -71,6 +70,8 @@ const Rsvp: React.FC = () => {
   // Step three, the details. The name is already known by now.
   const [guestName, setGuestName] = useState('');
   const [token, setToken] = useState('');
+  // How many extra guests this invitation covers. Comes from the guest record.
+  const [allowance, setAllowance] = useState(0);
   const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -144,13 +145,17 @@ const Rsvp: React.FC = () => {
     setPicks([]);
     setToken('');
     setGuestName('');
+    setAllowance(0);
+    setParty([]);
+    setErrors({});
     setLookupError(null);
     setStep('lookup');
   };
 
-  const acceptMatch = (name: string, matchToken: string) => {
+  const acceptMatch = (name: string, matchToken: string, plusOnes: number) => {
     setGuestName(name);
     setToken(matchToken);
+    setAllowance(plusOnes);
     setPicks([]);
     setLookupError(null);
     setStep('details');
@@ -175,7 +180,7 @@ const Rsvp: React.FC = () => {
 
       switch (result.status) {
         case 'exact':
-          acceptMatch(result.name ?? full, result.token ?? '');
+          acceptMatch(result.name ?? full, result.token ?? '', result.plusOnes ?? 0);
           break;
         case 'suggest':
           setPicks(result.picks ?? []);
@@ -211,7 +216,7 @@ const Rsvp: React.FC = () => {
   };
 
   const addMember = () => {
-    if (party.length >= MAX_ADDITIONAL_GUESTS) return;
+    if (party.length >= allowance) return;
     const id = nextMemberId.current++;
     setParty((current) => [...current, { id, firstName: '', lastName: '', attending: null }]);
     requestAnimationFrame(() => {
@@ -244,8 +249,10 @@ const Rsvp: React.FC = () => {
       found.phone = 'That phone number looks too short.';
     }
 
-    if (email.trim() && !EMAIL_PATTERN.test(email.trim())) {
-      found.email = 'That email looks incomplete. Or leave it blank.';
+    if (!email.trim()) {
+      found.email = 'Add an email so we can send you the details.';
+    } else if (!EMAIL_PATTERN.test(email.trim())) {
+      found.email = 'That email does not look right.';
     }
 
     if (attending === null) found.attending = 'Let us know whether you can make it.';
@@ -311,12 +318,19 @@ const Rsvp: React.FC = () => {
           setLookupError('That took a little too long, so we need to check your name again.');
           startAgain();
           break;
+        case 'too_many_guests':
+          setSendError(
+            result.plusOnes === 0
+              ? 'Your invitation is just for you. Please remove the extra guests.'
+              : `Your invitation covers ${result.plusOnes} extra ${result.plusOnes === 1 ? 'guest' : 'guests'}. Please remove the rest.`
+          );
+          break;
         case 'bad_phone':
           setErrors({ phone: 'That phone number does not look right.' });
           fieldRefs.current.phone?.focus({ preventScroll: true });
           break;
         case 'bad_email':
-          setErrors({ email: 'That email looks incomplete. Or leave it blank.' });
+          setErrors({ email: 'That email does not look right.' });
           fieldRefs.current.email?.focus({ preventScroll: true });
           break;
         default:
@@ -444,7 +458,7 @@ const Rsvp: React.FC = () => {
                     key={pick.token}
                     ref={setRef(`pick-${index}`)}
                     type="button"
-                    onClick={() => acceptMatch(pick.name, pick.token)}
+                    onClick={() => acceptMatch(pick.name, pick.token, pick.plusOnes ?? 0)}
                     className="w-full flex items-center justify-between gap-4 p-5 rounded-2xl border-2 border-amber-200 bg-white hover:border-amber-500 hover:bg-amber-50 transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                   >
                     <span className="font-serif text-xl text-gray-800">{pick.name}</span>
@@ -502,7 +516,7 @@ const Rsvp: React.FC = () => {
 
               <div>
                 <label htmlFor="rsvp-email" className={labelClasses}>
-                  Email <span className="text-gray-400 normal-case tracking-normal font-normal">(optional)</span>
+                  Email
                 </label>
                 <input
                   id="rsvp-email"
@@ -567,8 +581,13 @@ const Rsvp: React.FC = () => {
                 <div role="alert">{errors.attending && <p className={errorClasses}>{errors.attending}</p>}</div>
               </fieldset>
 
-              {/* Additional guests, up to four, all sent with the one button below. */}
+              {/* Only shown when the invitation covers extra guests. The real
+                  limit is enforced by the API against the stored record. */}
+              {allowance > 0 && (
               <div className="pt-2 border-t border-amber-100 space-y-4">
+                <p className="text-[10px] uppercase tracking-widest font-bold text-amber-600">
+                  Your invitation includes {allowance} extra {allowance === 1 ? 'guest' : 'guests'}
+                </p>
                 {party.map((member, index) => (
                   <div key={member.id} className="bg-amber-50/40 border border-amber-100 rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
@@ -667,7 +686,7 @@ const Rsvp: React.FC = () => {
                   </div>
                 ))}
 
-                {party.length < MAX_ADDITIONAL_GUESTS ? (
+                {party.length < allowance ? (
                   <button
                     type="button"
                     onClick={addMember}
@@ -684,11 +703,12 @@ const Rsvp: React.FC = () => {
                   </button>
                 ) : (
                   <p className="text-center text-sm text-gray-400 font-light py-2">
-                    That is the maximum of {MAX_ADDITIONAL_GUESTS} extra guests. Message us if you
-                    need to add more.
+                    That is all {allowance} of your guests. Message us if you need to bring
+                    anyone else.
                   </p>
                 )}
               </div>
+              )}
 
               {/* Honeypot. Kept out of the tab order and hidden from assistive tech. */}
               <div className="absolute left-[-9999px] top-0" aria-hidden="true">

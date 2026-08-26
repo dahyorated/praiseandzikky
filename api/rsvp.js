@@ -9,7 +9,6 @@ import { guestHasResponded, writeRsvps } from '../lib/firebaseRest.mjs';
 import { verifyToken } from '../lib/rsvpToken.mjs';
 import { allow, callerIp } from '../lib/rateLimit.mjs';
 
-const MAX_ADDITIONAL_GUESTS = 4;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default async function handler(req, res) {
@@ -41,12 +40,12 @@ export default async function handler(req, res) {
   }
 
   const email = String(body.email ?? '').trim().slice(0, 120);
-  if (email && !EMAIL_PATTERN.test(email)) {
+  if (!email || !EMAIL_PATTERN.test(email)) {
     return res.status(400).json({ status: 'bad_email' });
   }
 
   const attending = body.attending === true;
-  const party = Array.isArray(body.guests) ? body.guests.slice(0, MAX_ADDITIONAL_GUESTS) : [];
+  const party = Array.isArray(body.guests) ? body.guests : [];
 
   let guests;
   try {
@@ -60,6 +59,12 @@ export default async function handler(req, res) {
   if (!invitee) {
     // On the list when the token was issued, gone now.
     return res.status(401).json({ status: 'expired' });
+  }
+
+  // Enforced server-side. Hiding the button in the form is a convenience, not
+  // a control, so the real check happens against the stored record.
+  if (party.length > invitee.plusOnes) {
+    return res.status(400).json({ status: 'too_many_guests', plusOnes: invitee.plusOnes });
   }
 
   try {

@@ -40,6 +40,7 @@ export default async function handler(req, res) {
       status: 'exact',
       name: result.guest.name,
       token: issueToken(result.guest.key),
+      plusOnes: result.guest.plusOnes,
     });
   }
 
@@ -49,6 +50,7 @@ export default async function handler(req, res) {
       picks: result.picks.slice(0, 2).map((guest) => ({
         name: guest.name,
         token: issueToken(guest.key),
+        plusOnes: guest.plusOnes,
       })),
     });
   }

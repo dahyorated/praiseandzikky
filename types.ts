@@ -29,12 +29,15 @@ export interface GalleryImage {
 export interface MatchPick {
   name: string;
   token: string;
+  // How many extra guests this invitation covers.
+  plusOnes: number;
 }
 
 export interface MatchResponse {
   status: 'exact' | 'suggest' | 'single' | 'none' | 'slow_down' | 'unavailable';
   name?: string;
   token?: string;
+  plusOnes?: number;
   picks?: MatchPick[];
 }
 
@@ -54,6 +57,7 @@ export interface RsvpRequest {
 }
 
 export interface RsvpResponse {
-  status: 'ok' | 'already' | 'expired' | 'bad_phone' | 'bad_email' | 'slow_down' | 'unavailable';
+  status: 'ok' | 'already' | 'expired' | 'bad_phone' | 'bad_email' | 'too_many_guests' | 'slow_down' | 'unavailable';
   name?: string;
+  plusOnes?: number;
 }

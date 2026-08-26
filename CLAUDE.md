@@ -40,11 +40,15 @@ The guest list must never reach a browser, so matching runs server-side.
 - **lib/rateLimit.mjs**: Per instance sliding window. A speed bump, not a guarantee
 - **api/match.js**: POST { name }, returns exact, suggest, single or none. At most one suggestion, never a count
 - **api/rsvp.js**: POST with token, writes one record per person keyed on the guest key, so a second attempt returns `already` instead of duplicating
-- **scripts/build-guests.mjs**: guests.txt to guests.json, dry run by default. Import the result at /guests in the Firebase console
+- **scripts/build-guests.mjs**: guests.txt to guests.json, dry run by default. A trailing `+N` on a line is that guest's plus one allowance
+- **scripts/upload-guests.mjs**: writes guests.json to /guests only. Use this rather than the console Import JSON, which replaces whichever node you are viewing and wipes /rsvps if run at the root
 - **test/names.test.mjs**: The regression baseline. Run before tuning COVERAGE_MIN or ANCHOR_MIN
 
 Additional guests are vouched for by the named invitee and are not checked
-against the list themselves.
+against the list themselves, but the number of them is capped by that guest's
+plusOnes. The form only offers the option when the allowance is above zero, and
+api/rsvp.js re-reads the stored record and rejects an oversized party, so hiding
+the button is a convenience rather than the control.
 
 `npm run dev` does not serve /api. Use `npm run dev:api` for that.
 

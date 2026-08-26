@@ -13,6 +13,17 @@ import { writeGuests } from '../lib/firebaseRest.mjs';
 
 const replace = process.argv.includes('--replace');
 
+if (!process.env.FIREBASE_SERVICE_ACCOUNT || !process.env.FIREBASE_DATABASE_URL) {
+  console.error('Missing credentials.');
+  console.error('');
+  console.error('Create .env.local in the project root with:');
+  console.error('  FIREBASE_SERVICE_ACCOUNT=<the base64 blob>');
+  console.error('  FIREBASE_DATABASE_URL=<your database url>');
+  console.error('');
+  console.error('Same two values you put in Vercel. .env.local is gitignored.');
+  process.exit(1);
+}
+
 let guests;
 try {
   guests = JSON.parse(readFileSync('guests.json', 'utf8'));

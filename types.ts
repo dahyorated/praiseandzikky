@@ -58,8 +58,15 @@ export interface RsvpRequest {
   website: string;
 }
 
+export interface AccessCode {
+  name: string;
+  code: string;
+}
+
 export interface RsvpResponse {
   status: 'ok' | 'already' | 'expired' | 'bad_phone' | 'bad_email' | 'too_many_guests' | 'slow_down' | 'unavailable';
   name?: string;
   plusOnes?: number;
+  /** Everyone attending, with their reception code. Empty for a regret. */
+  codes?: AccessCode[];
 }

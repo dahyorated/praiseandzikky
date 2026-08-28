@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { matchGuest, submitRsvp, HELP_CONTACTS } from '../services/rsvpService';
 import CountryCodeSelect, { DEFAULT_COUNTRY, type Country } from './CountryCodeSelect';
-import type { MatchPick, RsvpGuestInput } from '../types';
+import type { AccessCode, MatchPick, RsvpGuestInput } from '../types';
 
 type Step = 'lookup' | 'confirm' | 'details' | 'done';
 
@@ -100,6 +100,9 @@ const Rsvp: React.FC = () => {
 
   // Step four.
   const [alreadyResponded, setAlreadyResponded] = useState(false);
+  // Shown on the confirmation as well as emailed, so a failed send never
+  // leaves anyone without their code.
+  const [codes, setCodes] = useState<AccessCode[]>([]);
   const [showOverlay, setShowOverlay] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
 
@@ -163,6 +166,7 @@ const Rsvp: React.FC = () => {
     setGuestName('');
     setAllowance(0);
     setParty([]);
+    setCodes([]);
     setAttending(null);
     setAsoEbi(false);
     setErrors({});
@@ -332,6 +336,7 @@ const Rsvp: React.FC = () => {
         case 'ok':
         case 'already':
           setAlreadyResponded(result.status === 'already');
+          setCodes(result.codes ?? []);
           setSecondsLeft(REDIRECT_SECONDS);
           setStep('done');
           setShowOverlay(true);
@@ -851,6 +856,29 @@ const Rsvp: React.FC = () => {
                       ? `We have got all ${totalAttending} of you down. See you soon, and please, come looking boogie.`
                       : 'See you soon. And please, come looking boogie.'}
                   </p>
+                  {codes.length > 0 && (
+                    <div className="pt-2 space-y-3 text-left max-w-sm mx-auto">
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-amber-600 text-center">
+                        {codes.length > 1 ? 'Your reception access codes' : 'Your reception access code'}
+                      </p>
+                      {codes.map((entry) => (
+                        <div
+                          key={entry.code}
+                          className="flex items-center justify-between gap-4 px-5 py-3 rounded-2xl border border-amber-200 bg-amber-50/60"
+                        >
+                          <span className="font-serif text-gray-700 truncate">{entry.name}</span>
+                          <span className="font-mono font-bold tracking-widest text-gray-900 shrink-0">
+                            #{entry.code}
+                          </span>
+                        </div>
+                      ))}
+                      <p className="text-sm text-gray-500 font-light text-center">
+                        We have emailed {codes.length > 1 ? 'these' : 'this'} to you as well. Please bring{' '}
+                        {codes.length > 1 ? 'them' : 'it'} to the reception.
+                      </p>
+                    </div>
+                  )}
+
                   <p className="font-cursive text-2xl text-amber-600 pt-2">#ALifetimeOfSunshine</p>
                 </>
               ) : (

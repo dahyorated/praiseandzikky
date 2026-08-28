@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { guestKey, matchName, normalise, parseGuestLine, tokenise, wordScore, MAX_PLUS_ONES } from '../lib/names.mjs';
+import {
+  guestKey,
+  matchName,
+  normalise,
+  parseGuestLine,
+  tokenise,
+  wordScore,
+  generateCode,
+  derivePartyCode,
+  MAX_PLUS_ONES,
+} from '../lib/names.mjs';
 
 const GUESTS = [
   'John Doe',
@@ -70,7 +80,7 @@ test('nothing is ever offered for an empty or unknown name', () => {
 test('a trailing +N is read as a plus one allowance', () => {
   assert.deepEqual(
     { ...parseGuestLine('Baroh Balogun +2') },
-    { name: 'Baroh Balogun', plusOnes: 2, requested: 2, clamped: false }
+    { name: 'Baroh Balogun', plusOnes: 2, requested: 2, clamped: false, code: '' }
   );
   assert.equal(parseGuestLine('Oyinlola Ganiyu +1').plusOnes, 1);
   assert.equal(parseGuestLine('Tight+2').plusOnes, 2);
@@ -132,4 +142,48 @@ test('transpositions count as one mistake, not two', () => {
   // it under the per word floor and lose a very common kind of typo.
   assert.ok(wordScore('abaoba', 'aboaba') > 0.8);
   assert.ok(wordScore('dami', 'dayo') < 0.7);
+});
+
+test('an access code is read from the line, in either order', () => {
+  assert.equal(parseGuestLine('Dayo Adedayo +1 #PE111E').code, 'PE111E');
+  assert.equal(parseGuestLine('Dayo Adedayo #PE111E +1').code, 'PE111E');
+  assert.equal(parseGuestLine('Dayo Adedayo #PE111E +1').plusOnes, 1);
+  assert.equal(parseGuestLine('Bolu Balogun #pe204a').code, 'PE204A', 'codes normalise to upper case');
+  assert.equal(parseGuestLine('Plain Name').code, '');
+});
+
+test('neither suffix leaks into the name or the key', () => {
+  assert.equal(parseGuestLine('Dayo Adedayo +1 #PE111E').name, 'Dayo Adedayo');
+  // Adding a code to an existing line must not move that guest's key, or an
+  // RSVP already filed under it would be orphaned.
+  assert.equal(
+    guestKey(parseGuestLine('Dayo Adedayo +1 #PE111E').name),
+    guestKey('Dayo Adedayo')
+  );
+});
+
+test('generated codes are stable for the same guest', () => {
+  assert.equal(generateCode('adedayo_dayo'), generateCode('adedayo_dayo'));
+  assert.notEqual(generateCode('adedayo_dayo'), generateCode('balogun_bolu'));
+});
+
+test('generated codes avoid characters that get misread aloud', () => {
+  const codes = Array.from({ length: 300 }, (_, i) => generateCode(`guest_${i}`));
+  for (const code of codes) {
+    assert.match(code, /^PE[2-9A-HJ-NP-Z]{4}$/, `${code} should avoid 0, O, 1, I and L`);
+  }
+});
+
+test('a taken code is never handed out twice', () => {
+  const first = generateCode('adedayo_dayo');
+  const second = generateCode('adedayo_dayo', new Set([first]));
+  assert.notEqual(second, first);
+  const third = generateCode('adedayo_dayo', new Set([first, second]));
+  assert.ok(third !== first && third !== second);
+});
+
+test('party codes hang off the invitee code and start at 2', () => {
+  assert.equal(derivePartyCode('PETFKQ', 0), 'PETFKQ-2');
+  assert.equal(derivePartyCode('PETFKQ', 1), 'PETFKQ-3');
+  assert.equal(derivePartyCode('', 0), '', 'no invitee code means no derived code');
 });

@@ -7,6 +7,9 @@
 import { loadGuests } from '../lib/firebaseRest.mjs';
 import { guestHasResponded, writeRsvps } from '../lib/firebaseRest.mjs';
 import { verifyToken } from '../lib/rsvpToken.mjs';
+import { derivePartyCode } from '../lib/names.mjs';
+import { confirmationEmail } from '../lib/emailTemplate.mjs';
+import { sendEmail } from '../lib/resend.mjs';
 import { allow, callerIp } from '../lib/rateLimit.mjs';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -97,6 +100,7 @@ export default async function handler(req, res) {
       lastName: restOfName(invitee.name),
       attending,
       asoEbi,
+      code: invitee.code,
       isPrimary: true,
     },
   };
@@ -115,6 +119,7 @@ export default async function handler(req, res) {
       lastName,
       attending: memberAttending,
       asoEbi: memberAttending && member?.asoEbi === true,
+      code: derivePartyCode(invitee.code, index),
       isPrimary: false,
     };
   });
@@ -126,7 +131,27 @@ export default async function handler(req, res) {
     return res.status(503).json({ status: 'unavailable' });
   }
 
-  return res.status(200).json({ status: 'ok', name: invitee.name });
+  const attendees = Object.values(records)
+    .filter((record) => record.attending && record.code)
+    .map((record) => ({ name: record.name, code: record.code }));
+
+  // Only people who are actually coming need a reception code.
+  if (attendees.length > 0) {
+    const message = confirmationEmail({
+      firstName: firstWord(invitee.name),
+      people: attendees,
+      asoEbi: Object.values(records).some((record) => record.asoEbi),
+    });
+
+    // Never allowed to fail the RSVP. A Resend outage must not stop people
+    // responding, and the codes are returned below regardless.
+    const result = await sendEmail({ to: email, ...message });
+    if (!result.sent) {
+      console.error(`Confirmation email not sent to ${email}: ${result.error ?? result.skipped}`);
+    }
+  }
+
+  return res.status(200).json({ status: 'ok', name: invitee.name, codes: attendees });
 }
 
 function firstWord(name) {

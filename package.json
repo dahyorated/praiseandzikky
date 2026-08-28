@@ -8,7 +8,7 @@
     "dev:api": "vercel dev",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test test/*.test.mjs",
+    "test": "node --experimental-test-module-mocks --test test/*.test.mjs",
     "guests": "node scripts/build-guests.mjs",
     "guests:upload": "node --env-file-if-exists=.env.local scripts/upload-guests.mjs"
   },

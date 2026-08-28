@@ -40,7 +40,9 @@ The guest list must never reach a browser, so matching runs server-side.
 - **lib/rateLimit.mjs**: Per instance sliding window. A speed bump, not a guarantee
 - **api/match.js**: POST { name }, returns exact, suggest, single or none. At most one suggestion, never a count
 - **api/rsvp.js**: POST with token, writes one record per person keyed on the guest key, so a second attempt returns `already` instead of duplicating
-- **scripts/build-guests.mjs**: guests.txt to guests.json, dry run by default. A trailing `+N` on a line is that guest's plus one allowance
+- **scripts/build-guests.mjs**: guests.txt to guests.json, dry run by default. A line is `Name +N #CODE`, both suffixes optional and order independent. Any guest without a code gets one generated and written back into guests.txt, so it is pinned and never moves afterwards. Refuses duplicate codes
+- **lib/resend.mjs**: Confirmation email over the Resend API, no SDK. Never throws, so a send failure cannot fail an RSVP
+- **lib/emailTemplate.mjs**: HTML and plain text bodies. Deliberately links to the site rather than restating event details, which change
 - **scripts/upload-guests.mjs**: writes guests.json to /guests only. Use this rather than the console Import JSON, which replaces whichever node you are viewing and wipes /rsvps if run at the root
 - **test/names.test.mjs**: The regression baseline. Run before tuning COVERAGE_MIN or ANCHOR_MIN
 
@@ -69,11 +71,14 @@ the button is a convenience rather than the control.
 
 ## Environment
 
-Three variables, set in the Vercel dashboard and in .env.local for local API
+Five variables, set in the Vercel dashboard and in .env.local for local API
 work. See .env.example. Never commit real values, this repo is public.
 
 Database rules deny all client access to both /guests and /rsvps. Only the
 service account and the Firebase console can read or write them.
+
+Access codes are only released after a successful RSVP. /api/match must never
+return one, since it will confirm a name to anyone who guesses it.
 
 ## Deployment
 

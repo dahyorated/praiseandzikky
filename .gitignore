@@ -16,3 +16,6 @@ rsvps-*.csv
 
 # Vercel
 .vercel
+
+# macOS
+.DS_Store

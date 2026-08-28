@@ -47,6 +47,29 @@ const App: React.FC = () => {
       }
     };
   }, []);
+  // Arriving on /#registry from an email lands before React has rendered, so
+  // the browser finds nothing to scroll to and gives up. Do it ourselves once
+  // the section exists, then again after images settle the layout.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const scrollToTarget = () => {
+      document
+        .getElementById(id)
+        ?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+    };
+
+    const firstPaint = requestAnimationFrame(scrollToTarget);
+    const afterImages = window.setTimeout(scrollToTarget, 700);
+
+    return () => {
+      cancelAnimationFrame(firstPaint);
+      window.clearTimeout(afterImages);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Navbar />

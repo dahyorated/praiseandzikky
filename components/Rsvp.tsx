@@ -110,6 +110,7 @@ const Rsvp: React.FC = () => {
   const isFirstRender = useRef(true);
 
   const phoneLabelId = useId();
+  const asoEbiQuestionId = useId();
 
   const setRef = (key: string) => (el: HTMLElement | null) => {
     fieldRefs.current[key] = el;
@@ -608,6 +609,14 @@ const Rsvp: React.FC = () => {
               </fieldset>
 
               {attending === true && (
+                <div className="space-y-3">
+                  <div>
+                    <span className={labelClasses}>Aso Ebi</span>
+                    <p id={asoEbiQuestionId} className="text-gray-600 font-light">
+                      Would you like us to contact you about Aso Ebi?
+                    </p>
+                  </div>
+
                 <label className={`flex items-start gap-4 p-5 rounded-2xl border-2 cursor-pointer transition-all focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2 ${
                   asoEbi ? 'border-amber-500 bg-amber-50' : 'border-amber-100 bg-white hover:border-amber-300 hover:bg-amber-50/40'
                 }`}>
@@ -615,6 +624,7 @@ const Rsvp: React.FC = () => {
                     type="checkbox"
                     className="sr-only"
                     checked={asoEbi}
+                    aria-describedby={asoEbiQuestionId}
                     onChange={(e) => setAsoEbi(e.target.checked)}
                   />
                     <span
@@ -628,12 +638,13 @@ const Rsvp: React.FC = () => {
                       </svg>
                     </span>
                   <span className="min-w-0">
-                    <span className="block font-serif text-lg text-gray-800">Contact me for Aso Ebi</span>
+                    <span className="block font-serif text-lg text-gray-800">Yes, send me the fabric details</span>
                     <span className="block text-sm text-gray-500 font-light">
-                      We will reach out with the fabric details and prices.
+                      We will reach out with the fabric and prices closer to the day.
                     </span>
                   </span>
                 </label>
+                </div>
               )}
 
               {/* Only shown when the invitation covers extra guests. The real
@@ -757,7 +768,7 @@ const Rsvp: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                         </span>
-                        <span className="text-sm text-gray-600 font-light">Contact them for Aso Ebi</span>
+                        <span className="text-sm text-gray-600 font-light">Yes, send them the Aso Ebi details too</span>
                       </label>
                     )}
                   </div>

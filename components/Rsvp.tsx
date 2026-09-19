@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
+import React, { useState, useRef, useEffect, useId } from 'react';
 import { matchGuest, submitRsvp, HELP_CONTACTS } from '../services/rsvpService';
 import CountryCodeSelect, { DEFAULT_COUNTRY, type Country } from './CountryCodeSelect';
 import type { AccessCode, MatchPick, RsvpGuestInput } from '../types';
@@ -14,7 +14,6 @@ interface PartyMember {
   asoEbi: boolean;
 }
 
-const REDIRECT_SECONDS = 4;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // The disc is clipped at the horizon so it emerges rather than slides in. The
@@ -103,12 +102,9 @@ const Rsvp: React.FC = () => {
   // Shown on the confirmation as well as emailed, so a failed send never
   // leaves anyone without their code.
   const [codes, setCodes] = useState<AccessCode[]>([]);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
 
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
   const confirmationRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
   const nextMemberId = useRef(1);
   const isFirstRender = useRef(true);
 
@@ -131,34 +127,19 @@ const Rsvp: React.FC = () => {
       step === 'lookup' ? 'firstName' : step === 'confirm' ? 'pick-0' : step === 'details' ? 'phone' : null;
 
     if (target) fieldRefs.current[target]?.focus({ preventScroll: true });
-    if (step === 'done' && !showOverlay) confirmationRef.current?.focus({ preventScroll: true });
-  }, [step, showOverlay]);
 
-  const finishAndScrollUp = useCallback(() => {
-    setShowOverlay(false);
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
-  }, []);
-
-  // Tick the visible counter down, then hand the page back to the guest.
-  useEffect(() => {
-    if (!showOverlay) return;
-
-    overlayRef.current?.focus({ preventScroll: true });
-
-    const tick = window.setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
-    const done = window.setTimeout(finishAndScrollUp, REDIRECT_SECONDS * 1000);
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') finishAndScrollUp();
-    };
-    document.addEventListener('keydown', handleEscape);
-
-    return () => {
-      window.clearInterval(tick);
-      window.clearTimeout(done);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [showOverlay, finishAndScrollUp]);
+    // The guest stays here with their code. The form was taller than the
+    // confirmation, so bring it into view rather than leaving them staring at
+    // whatever the shorter card now sits next to.
+    if (step === 'done') {
+      confirmationRef.current?.focus({ preventScroll: true });
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      confirmationRef.current?.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'center',
+      });
+    }
+  }, [step]);
 
   const startAgain = () => {
     setPicks([]);
@@ -337,9 +318,7 @@ const Rsvp: React.FC = () => {
         case 'already':
           setAlreadyResponded(result.status === 'already');
           setCodes(result.codes ?? []);
-          setSecondsLeft(REDIRECT_SECONDS);
           setStep('done');
-          setShowOverlay(true);
           break;
         case 'expired':
           setLookupError('That took a little too long, so we need to check your name again.');
@@ -898,82 +877,6 @@ const Rsvp: React.FC = () => {
         </div>
       </div>
 
-      {showOverlay && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300"
-          onClick={finishAndScrollUp}
-        >
-          <div
-            ref={overlayRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rsvp-overlay-title"
-            tabIndex={-1}
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-amber-100 p-10 text-center space-y-5 overflow-hidden focus-visible:outline-none animate-in fade-in zoom-in-95 duration-300"
-          >
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200"></div>
-
-            {totalAttending > 0 || alreadyResponded ? (
-              <RisingSun className="w-40 h-24 mx-auto" />
-            ) : (
-              <svg className="w-12 h-12 mx-auto text-amber-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-            )}
-
-            <h3 id="rsvp-overlay-title" className="text-3xl font-serif text-gray-900">
-              {totalAttending > 0 || alreadyResponded ? 'Thank you for RSVPing' : 'Thank you for letting us know'}
-            </h3>
-
-            <p className="text-gray-500 leading-relaxed">
-              That means a lot to us. We are taking you back to the top, in case you fancy another
-              look around our page.
-            </p>
-
-            <p className="sr-only">
-              Returning you to the top of the page in {REDIRECT_SECONDS} seconds. Press Escape to go
-              now.
-            </p>
-
-            <div className="flex flex-col items-center gap-3 pt-1">
-              <div className="relative w-16 h-16">
-                <svg viewBox="0 0 48 48" className="w-16 h-16" aria-hidden="true">
-                  <circle cx="24" cy="24" r="20" fill="none" stroke="#FDE68A" strokeWidth="3" />
-                  <circle
-                    className="rsvp-countdown-ring"
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    fill="none"
-                    stroke="#F59E0B"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    transform="rotate(-90 24 24)"
-                  />
-                </svg>
-                <span
-                  className="absolute inset-0 flex items-center justify-center text-xl font-serif text-gray-800 tabular-nums"
-                  aria-hidden="true"
-                >
-                  {secondsLeft}
-                </span>
-              </div>
-              <span className="text-[10px] uppercase tracking-widest font-bold text-amber-600">
-                Back to the top
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={finishAndScrollUp}
-              className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-amber-600 transition-colors rounded px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
-            >
-              Take me there now
-            </button>
-          </div>
-        </div>
-      )}
     </section>
   );
 };

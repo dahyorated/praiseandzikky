@@ -48,18 +48,8 @@
             transform-origin: 60px 52px;
             animation: rsvp-rays-in 0.5s ease-out 0.35s both;
         }
-        /* Depleting ring on the thank you overlay. 125.664 is the circumference
-           of the r=20 circle it is drawn on. */
-        @keyframes rsvp-countdown-ring {
-            from { stroke-dashoffset: 0; }
-            to   { stroke-dashoffset: 125.664; }
-        }
-        .rsvp-countdown-ring {
-            stroke-dasharray: 125.664;
-            animation: rsvp-countdown-ring 4s linear both;
-        }
         @media (prefers-reduced-motion: reduce) {
-            .rsvp-sun-disc, .rsvp-rays, .rsvp-countdown-ring { animation: none; }
+            .rsvp-sun-disc, .rsvp-rays { animation: none; }
         }
     </style>
 <script type="importmap">
